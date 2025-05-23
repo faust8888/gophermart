@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"github.com/faust8888/gophermart/internal/gophermart/repository/postgres"
+	"github.com/faust8888/gophermart/internal/gophermart/security"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -43,6 +44,11 @@ func TestRegistrationHandler(t *testing.T) {
 				resp, _ := createPostRequest(srv.GetFullPath(UserRegisterHandlerPath), body).Send()
 
 				assert.Equal(t, test.wantCode, resp.StatusCode())
+				if test.mockErrorReturn == nil {
+					claims, err := security.GetClaims(getTokenFromResponse(resp), security.AuthSecretKey)
+					assert.NoError(t, err)
+					assert.True(t, security.CheckUserSession(claims.SessionID))
+				}
 			}
 		})
 	}

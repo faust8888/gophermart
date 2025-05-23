@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/faust8888/gophermart/internal/gophermart/repository/postgres"
+	"github.com/faust8888/gophermart/internal/middleware/logger"
 	"github.com/golang-migrate/migrate/v4"
 	postgresMigrate "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"log"
 )
 
 func Run(dataSourceName string) error {
@@ -35,6 +35,6 @@ func Run(dataSourceName string) error {
 	if err = m.Up(); !errors.Is(err, migrate.ErrNoChange) && err != nil {
 		return fmt.Errorf("migration.run: applying migrations - %w", err)
 	}
-	log.Printf("migration.run: migration applied successfully")
+	logger.Log.Info("Migration successfully applied")
 	return nil
 }

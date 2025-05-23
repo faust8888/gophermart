@@ -6,19 +6,19 @@ import (
 	"fmt"
 	"github.com/faust8888/gophermart/internal/gophermart/model"
 	"github.com/faust8888/gophermart/internal/gophermart/repository/postgres"
+	"github.com/faust8888/gophermart/internal/gophermart/security"
 	"github.com/faust8888/gophermart/internal/gophermart/service"
-	"github.com/go-playground/validator/v10"
 	"net/http"
 )
 
 const UserRegisterHandlerPath = "/api/user/register"
 
 type Register struct {
-	registerService *service.RegisterService
+	registerService service.RegisterService
 }
 
 func (r *Register) RegisterUser(res http.ResponseWriter, req *http.Request) {
-	requestBody, err := readBody(req)
+	requestBody, err := readRequestBody(req)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
@@ -30,14 +30,8 @@ func (r *Register) RegisterUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err = validateRequest(registerUserRequest); err != nil {
-		var validationErrors validator.ValidationErrors
-		errors.As(err, &validationErrors)
-		errorMessage := "Validation failed:"
-		for _, e := range validationErrors {
-			errorMessage += fmt.Sprintf(" Field: %s, Error: %s;", e.Field(), e.Tag())
-		}
-		http.Error(res, errorMessage, http.StatusBadRequest)
+	if validationErrorMessage := validateRequest(registerUserRequest); validationErrorMessage != "" {
+		http.Error(res, validationErrorMessage, http.StatusBadRequest)
 		return
 	}
 
@@ -51,14 +45,19 @@ func (r *Register) RegisterUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	token, err := security.BuildToken(security.AuthSecretKey, registerUserRequest.Login)
+	if err != nil {
+		http.Error(res, fmt.Sprintf("build token: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
+	http.SetCookie(res, &http.Cookie{
+		Name:  security.AuthorizationTokenName,
+		Value: token,
+	})
+
 	res.WriteHeader(http.StatusOK)
 }
 
-func NewRegisterHandler(srv *service.RegisterService) Register {
-	return Register{registerService: srv}
-}
-
-func validateRequest(req interface{}) error {
-	validate := validator.New()
-	return validate.Struct(req)
+func NewRegisterHandler(registerSrv service.RegisterService) Register {
+	return Register{registerService: registerSrv}
 }

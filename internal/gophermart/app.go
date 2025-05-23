@@ -1,10 +1,12 @@
 package gophermart
 
 import (
+	"fmt"
 	"github.com/faust8888/gophermart/internal/gophermart/config"
 	"github.com/faust8888/gophermart/internal/gophermart/handler"
 	"github.com/faust8888/gophermart/internal/gophermart/migration"
 	"github.com/faust8888/gophermart/internal/gophermart/route"
+	"github.com/faust8888/gophermart/internal/middleware/logger"
 	"github.com/go-chi/chi/v5"
 	"net/http"
 )
@@ -15,7 +17,17 @@ type App struct {
 }
 
 func NewApp(handlerOptions ...handler.Option) *App {
+	err := logger.Initialize("INFO")
+	if err != nil {
+		fmt.Printf("Failed to initialize logger: %v", err)
+	}
+
 	cfg, err := config.New()
+	if err != nil {
+		panic(err)
+	}
+
+	err = migration.Run(cfg.DatabaseURI)
 	if err != nil {
 		panic(err)
 	}
@@ -30,11 +42,7 @@ func NewApp(handlerOptions ...handler.Option) *App {
 }
 
 func (s *App) Run() {
-	err := migration.Run(s.cfg.DatabaseURI)
-	if err != nil {
-		panic(err)
-	}
-	if err = http.ListenAndServe(s.cfg.RunAddress, s.Route); err != nil {
+	if err := http.ListenAndServe(s.cfg.RunAddress, s.Route); err != nil {
 		panic(err)
 	}
 }

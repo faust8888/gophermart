@@ -10,10 +10,10 @@ type route interface {
 	RegisterUser(res http.ResponseWriter, req *http.Request)
 	LoginUser(res http.ResponseWriter, req *http.Request)
 	CreateUserOrder(res http.ResponseWriter, req *http.Request)
-	//FindOrder(res http.ResponseWriter, req *http.Request)
-	//GetBalance(res http.ResponseWriter, req *http.Request)
-	//Withdraw(res http.ResponseWriter, req *http.Request)
-	//GetAllWithdraws(res http.ResponseWriter, req *http.Request)
+	FindAllOrders(res http.ResponseWriter, req *http.Request)
+	GetUserBalance(res http.ResponseWriter, req *http.Request)
+	WithdrawSum(res http.ResponseWriter, req *http.Request)
+	GetAllHistoryWithdraws(res http.ResponseWriter, req *http.Request)
 }
 
 func New(h route) *chi.Mux {
@@ -23,9 +23,9 @@ func New(h route) *chi.Mux {
 	router.Post("/api/user/register", h.RegisterUser)
 	router.Post("/api/user/login", h.LoginUser)
 	router.Post("/api/user/orders", h.CreateUserOrder)
-	//router.Get("/api/user/orders", h.FindOrder)
-	//router.Get("/api/user/balance", h.GetBalance)
-	//router.Post("/api/user/balance/withdraw", h.Withdraw)
-	//router.Get("/api/user/withdrawals", h.GetAllWithdraws)
+	router.Get("/api/user/orders", h.FindAllOrders)
+	router.Get("/api/user/balance", h.GetUserBalance)
+	router.Post("/api/user/balance/withdraw", h.WithdrawSum)
+	router.Get("/api/user/withdrawals", h.GetAllHistoryWithdraws)
 	return router
 }

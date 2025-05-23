@@ -19,23 +19,23 @@ var session = map[string]*jwt.NumericDate{}
 type Claims struct {
 	jwt.RegisteredClaims
 	Login     string
-	SessionId string
+	SessionID string
 }
 
 func BuildToken(key string, login string) (string, error) {
-	sessionId := uuid.New().String()
+	sessionID := uuid.New().String()
 	tokenWithClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenExp)),
 		},
 		Login:     login,
-		SessionId: sessionId,
+		SessionID: sessionID,
 	})
 	token, err := tokenWithClaims.SignedString([]byte(key))
 	if err != nil {
 		return "", fmt.Errorf("sign token: %w", err)
 	}
-	createUserSession(sessionId)
+	createUserSession(sessionID)
 	return token, nil
 }
 
@@ -58,11 +58,12 @@ func GetClaims(token string, encodedKey string) (*Claims, error) {
 	return claims, nil
 }
 
-func CheckUserSession(sessionId string) bool {
-	_, isSessionExists := session[sessionId]
+func CheckUserSession(sessionID string) bool {
+	_, isSessionExists := session[sessionID]
 	return isSessionExists
 }
 
-func createUserSession(sessionId string) {
-	session[sessionId] = jwt.NewNumericDate(time.Now().Add(TokenExp))
+func createUserSession(sessionID string) {
+	//TODO: Check TokenExp Date
+	session[sessionID] = jwt.NewNumericDate(time.Now().Add(TokenExp))
 }

@@ -52,11 +52,24 @@ func TestLoginHandler(t *testing.T) {
 					claims, err := security.GetClaims(token, security.AuthSecretKey)
 					assert.NoError(t, err)
 
-					assert.True(t, security.CheckUserSession(claims.SessionId))
+					assert.True(t, security.CheckUserSession(claims.SessionID))
 				} else {
 					assert.Empty(t, token)
 				}
 			}
 		})
 	}
+}
+
+func TestLogin_WithEmptyLogin(t *testing.T) {
+	srv := startTestServer(t)
+	defer srv.server.Close()
+
+	emptyLogin, password := "", "qwerty123"
+	body := fmt.Sprintf(`{"login": "%s", "password": "%s"}`, emptyLogin, password)
+	srv.mockUserRepository.EXPECT().CreateUser(emptyLogin, password).AnyTimes().Return(nil)
+
+	resp, _ := createPostRequest(srv.GetFullPath(UserLoginHandlerPath), body).Send()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode())
 }

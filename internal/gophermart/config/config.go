@@ -15,9 +15,9 @@ const (
 	DatabaseURIFlag           = "d"
 	AccrualSystemAddressFlag  = "r"
 	AuthKeyNameFlag           = "k"
-	RunAddressDefaultValue    = "localhost:8080"
+	RunAddressDefaultValue    = "localhost:8081"
 	DatabaseURIDefaultValue   = "postgres://localhost:5432/postgres?sslmode=disable"
-	AccrualSystemDefaultValue = "localhost:8080/accrual"
+	AccrualSystemDefaultValue = "http://localhost:8080"
 	GophermartFlagName        = "gophermart"
 )
 

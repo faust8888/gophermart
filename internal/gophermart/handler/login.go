@@ -2,23 +2,21 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/faust8888/gophermart/internal/gophermart/model"
 	"github.com/faust8888/gophermart/internal/gophermart/security"
 	"github.com/faust8888/gophermart/internal/gophermart/service"
-	"github.com/go-playground/validator/v10"
 	"net/http"
 )
 
 const UserLoginHandlerPath = "/api/user/login"
 
 type Login struct {
-	loginService *service.LoginService
+	loginService service.LoginService
 }
 
 func (l *Login) LoginUser(res http.ResponseWriter, req *http.Request) {
-	requestBody, err := readBody(req)
+	requestBody, err := readRequestBody(req)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
@@ -30,14 +28,8 @@ func (l *Login) LoginUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err = validateRequest(loginUserRequest); err != nil {
-		var validationErrors validator.ValidationErrors
-		errors.As(err, &validationErrors)
-		errorMessage := "Validation failed:"
-		for _, e := range validationErrors {
-			errorMessage += fmt.Sprintf(" Field: %s, Error: %s;", e.Field(), e.Tag())
-		}
-		http.Error(res, errorMessage, http.StatusBadRequest)
+	if validationErrorMessage := validateRequest(loginUserRequest); validationErrorMessage != "" {
+		http.Error(res, validationErrorMessage, http.StatusBadRequest)
 		return
 	}
 
@@ -60,6 +52,6 @@ func (l *Login) LoginUser(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusOK)
 }
 
-func NewLoginHandler(srv *service.LoginService) Login {
+func NewLoginHandler(srv service.LoginService) Login {
 	return Login{loginService: srv}
 }
