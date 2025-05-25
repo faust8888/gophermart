@@ -1,6 +1,8 @@
 package gophermart
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"github.com/faust8888/gophermart/internal/gophermart/config"
 	"github.com/faust8888/gophermart/internal/gophermart/handler"
@@ -8,7 +10,12 @@ import (
 	"github.com/faust8888/gophermart/internal/gophermart/route"
 	"github.com/faust8888/gophermart/internal/middleware/logger"
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 type App struct {
@@ -42,7 +49,35 @@ func NewApp(handlerOptions ...handler.Option) *App {
 }
 
 func (s *App) Run() {
-	if err := http.ListenAndServe(s.cfg.RunAddress, s.Route); err != nil {
-		panic(err)
+	server := &http.Server{
+		Addr:    s.cfg.RunAddress,
+		Handler: s.Route,
 	}
+
+	// Handle OS signals
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+	// Start server in background
+	go func() {
+		logger.Log.Info("Starting server", zap.String("address", server.Addr))
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Log.Fatal("Failed to start server", zap.Error(err))
+		}
+	}()
+
+	// Wait for signal to shut down
+	<-sigChan
+	logger.Log.Info("Gracefully shutting down server")
+
+	// Create a timeout for shutdown
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer shutdownCancel()
+
+	// Attempt graceful shutdown
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		logger.Log.Fatal("Failed to shutdown server", zap.Error(err))
+	}
+
+	logger.Log.Info("Server exited gracefully")
 }

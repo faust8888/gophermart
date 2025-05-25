@@ -1,11 +1,8 @@
 package service
 
 import (
-	"errors"
 	"github.com/faust8888/gophermart/internal/gophermart/model"
 )
-
-var ErrOrderNotExist = errors.New("order doesn't exist")
 
 type WithdrawService interface {
 	Withdraw(login string, order int64, sum float32) error

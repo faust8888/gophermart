@@ -3,6 +3,8 @@ package handler
 import (
 	"errors"
 	"github.com/faust8888/gophermart/internal/gophermart/service"
+	"github.com/faust8888/gophermart/internal/middleware/logger"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 )
@@ -16,23 +18,26 @@ type CreateOrder struct {
 func (r *CreateOrder) CreateUserOrder(res http.ResponseWriter, req *http.Request) {
 	isTokenCorrect, claims := validateToken(res, req)
 	if !isTokenCorrect {
+		logger.Log.Error("Invalid token")
 		return
 	}
 
 	requestBody, err := readRequestBody(req)
 	if err != nil {
+		logger.Log.Error("Error reading request body to create order", zap.Error(err))
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if !isValidByLuhn(requestBody.String()) {
+	if !isOrderNumberValidByLuhn(requestBody.String()) {
+		logger.Log.Error("Invalid order number", zap.String("orderNumber", requestBody.String()))
 		res.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
 
 	orderNumber, err := strconv.ParseInt(requestBody.String(), 10, 64)
 	if err != nil {
-		//4539319503436467
+		logger.Log.Error("Error parsing order number", zap.Error(err))
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -40,17 +45,19 @@ func (r *CreateOrder) CreateUserOrder(res http.ResponseWriter, req *http.Request
 	err = r.orderService.CreateOrder(claims.Login, orderNumber)
 	if err != nil {
 		if errors.Is(err, service.ErrOrderWasCreatedBefore) {
+			logger.Log.Error("Order was created before with the same user", zap.Error(err))
 			res.WriteHeader(http.StatusOK)
 			return
 		}
 		if errors.Is(err, service.ErrOrderWithAnotherUserExist) {
+			logger.Log.Error("Order was created before by another user", zap.Error(err))
 			http.Error(res, err.Error(), http.StatusConflict)
 			return
 		}
+		logger.Log.Error("Error creating order", zap.Error(err))
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	res.WriteHeader(http.StatusAccepted)
 }
 

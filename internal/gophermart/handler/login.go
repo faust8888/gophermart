@@ -6,6 +6,8 @@ import (
 	"github.com/faust8888/gophermart/internal/gophermart/model"
 	"github.com/faust8888/gophermart/internal/gophermart/security"
 	"github.com/faust8888/gophermart/internal/gophermart/service"
+	"github.com/faust8888/gophermart/internal/middleware/logger"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -18,29 +20,34 @@ type Login struct {
 func (l *Login) LoginUser(res http.ResponseWriter, req *http.Request) {
 	requestBody, err := readRequestBody(req)
 	if err != nil {
+		logger.Log.Error("Error reading request body to login", zap.Error(err))
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	var loginUserRequest model.LoginUserRequest
 	if err = json.Unmarshal(requestBody.Bytes(), &loginUserRequest); err != nil {
+		logger.Log.Error("Error unmarshalling request body to login", zap.Error(err))
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if validationErrorMessage := validateRequest(loginUserRequest); validationErrorMessage != "" {
+		logger.Log.Info("Failed to validate request to login", zap.String("validationError", validationErrorMessage))
 		http.Error(res, validationErrorMessage, http.StatusBadRequest)
 		return
 	}
 
 	err = l.loginService.Login(loginUserRequest.Login, loginUserRequest.Password)
 	if err != nil {
+		logger.Log.Error("Failed to login", zap.Error(err))
 		http.Error(res, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
 	token, err := security.BuildToken(security.AuthSecretKey, loginUserRequest.Login)
 	if err != nil {
+		logger.Log.Error("Failed to build token", zap.Error(err))
 		http.Error(res, fmt.Sprintf("build token: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}

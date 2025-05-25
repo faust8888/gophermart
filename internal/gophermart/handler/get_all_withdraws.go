@@ -15,28 +15,25 @@ type GetAllWithdraws struct {
 func (r *GetAllWithdraws) GetAllHistoryWithdraws(res http.ResponseWriter, req *http.Request) {
 	isTokenCorrect, claims := validateToken(res, req)
 	if !isTokenCorrect {
+		logger.Log.Error("Invalid token")
 		return
 	}
 
 	withdraws, err := r.withdrawHistoryService.FindAllHistoryWithdraws(claims.Login)
 	if err != nil {
+		logger.Log.Error("Error getting withdraws", zap.Error(err))
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	logger.Log.Info("GetAllHistoryWithdraws", zap.String("login", claims.Login), zap.Int("size", len(withdraws)))
 	resp, err := json.Marshal(&withdraws)
 	if err != nil {
+		logger.Log.Error("Error marshalling withdraws", zap.Error(err))
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusOK)
-	_, err = res.Write(resp)
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-	}
+	writeSuccesfullResponse(resp, res)
 }
 
 func NewGetAllHistoryWithdrawsHandler(srv service.WithdrawHistoryService) GetAllWithdraws {

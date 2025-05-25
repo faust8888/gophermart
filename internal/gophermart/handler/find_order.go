@@ -19,15 +19,19 @@ type FindOrders struct {
 func (r *FindOrders) FindAllOrders(res http.ResponseWriter, req *http.Request) {
 	isTokenCorrect, claims := validateToken(res, req)
 	if !isTokenCorrect {
+		logger.Log.Error("Invalid token")
 		return
 	}
 
 	orders, errNew := r.findOrderService.FindAllOrders(claims.Login)
 	if errNew != nil {
 		if errors.Is(errNew, postgres.ErrOrdersNotExist) {
+			logger.Log.Error("Orders do not exist for the user",
+				zap.Error(errNew), zap.String("login", claims.Login))
 			res.WriteHeader(http.StatusNoContent)
 			return
 		}
+		logger.Log.Error("Error finding orders", zap.Error(errNew))
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -39,12 +43,7 @@ func (r *FindOrders) FindAllOrders(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusOK)
-	_, err = res.Write(resp)
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-	}
+	writeSuccesfullResponse(resp, res)
 }
 
 func NewFindOrdersHandler(srv service.OrderService) FindOrders {

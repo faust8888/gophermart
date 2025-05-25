@@ -69,6 +69,15 @@ func readRequestBody(req *http.Request) (*bytes.Buffer, error) {
 	return &buf, nil
 }
 
+func writeSuccesfullResponse(response []byte, responseWriter http.ResponseWriter) {
+	responseWriter.Header().Set("Content-Type", "application/json")
+	responseWriter.WriteHeader(http.StatusOK)
+	_, err := responseWriter.Write(response)
+	if err != nil {
+		http.Error(responseWriter, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func validateRequest(req interface{}) string {
 	err := validator.New().Struct(req)
 	if err != nil {
@@ -102,11 +111,9 @@ func validateToken(res http.ResponseWriter, req *http.Request) (bool, *security.
 	return true, claims
 }
 
-func isValidByLuhn(number string) bool {
+func isOrderNumberValidByLuhn(number string) bool {
 	var sum int
 	double := false
-
-	// Проходим по строке с конца
 	for i := len(number) - 1; i >= 0; i-- {
 		digit, err := strconv.Atoi(string(number[i]))
 		if err != nil {
@@ -116,13 +123,11 @@ func isValidByLuhn(number string) bool {
 		if double {
 			digit *= 2
 			if digit > 9 {
-				digit = digit%10 + digit/10 // суммируем цифры, если больше 9
+				digit = digit%10 + digit/10
 			}
 		}
-
 		sum += digit
 		double = !double
 	}
-
 	return sum%10 == 0
 }

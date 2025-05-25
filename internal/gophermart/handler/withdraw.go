@@ -6,6 +6,8 @@ import (
 	"github.com/faust8888/gophermart/internal/gophermart/model"
 	"github.com/faust8888/gophermart/internal/gophermart/repository/postgres"
 	"github.com/faust8888/gophermart/internal/gophermart/service"
+	"github.com/faust8888/gophermart/internal/middleware/logger"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 )
@@ -19,22 +21,26 @@ type Withdraw struct {
 func (r *Withdraw) WithdrawSum(res http.ResponseWriter, req *http.Request) {
 	isTokenCorrect, claims := validateToken(res, req)
 	if !isTokenCorrect {
+		logger.Log.Error("Invalid token")
 		return
 	}
 
 	requestBody, err := readRequestBody(req)
 	if err != nil {
+		logger.Log.Error("Failed to read request body to withdraw", zap.Error(err))
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	var withdrawRequest model.WithdrawRequest
 	if err = json.Unmarshal(requestBody.Bytes(), &withdrawRequest); err != nil {
+		logger.Log.Error("Failed to unmarshal request body to withdraw", zap.Error(err))
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if validationErrorMessage := validateRequest(withdrawRequest); validationErrorMessage != "" {
+		logger.Log.Info("Failed to validate request to withdraw", zap.String("validationError", validationErrorMessage))
 		http.Error(res, validationErrorMessage, http.StatusBadRequest)
 		return
 	}
@@ -43,14 +49,12 @@ func (r *Withdraw) WithdrawSum(res http.ResponseWriter, req *http.Request) {
 
 	err = r.withdrawService.Withdraw(claims.Login, orderNumber, withdrawRequest.Sum)
 	if err != nil {
-		if errors.Is(err, service.ErrOrderNotExist) {
-			http.Error(res, err.Error(), http.StatusUnprocessableEntity)
-			return
-		}
 		if errors.Is(err, postgres.ErrNotEnoughBalance) {
+			logger.Log.Error("Not enough balance to withdraw", zap.Error(err))
 			http.Error(res, err.Error(), http.StatusPaymentRequired)
 			return
 		}
+		logger.Log.Error("Failed to withdraw", zap.Error(err))
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
