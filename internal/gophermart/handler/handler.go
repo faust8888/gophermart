@@ -98,7 +98,7 @@ func validateToken(res http.ResponseWriter, req *http.Request) (bool, *security.
 		res.WriteHeader(http.StatusUnauthorized)
 		return false, nil
 	}
-	claims, err := security.GetClaims(token, security.AuthSecretKey)
+	claims, err := security.GetClaims(token, config.AuthKey)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return false, nil

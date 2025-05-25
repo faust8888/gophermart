@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/faust8888/gophermart/internal/gophermart/config"
 	"github.com/faust8888/gophermart/internal/gophermart/model"
 	"github.com/faust8888/gophermart/internal/gophermart/repository/postgres"
 	"github.com/faust8888/gophermart/internal/gophermart/security"
@@ -52,7 +53,7 @@ func (r *Register) RegisterUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	token, err := security.BuildToken(security.AuthSecretKey, registerUserRequest.Login)
+	token, err := security.BuildToken(config.AuthKey, registerUserRequest.Login)
 	if err != nil {
 		logger.Log.Error("Failed to build token", zap.Error(err))
 		http.Error(res, fmt.Sprintf("build token: %s", err.Error()), http.StatusInternalServerError)

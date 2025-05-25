@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"github.com/faust8888/gophermart/internal/gophermart/config"
 	"github.com/faust8888/gophermart/internal/gophermart/repository/postgres"
 	"github.com/faust8888/gophermart/internal/gophermart/security"
 	"github.com/stretchr/testify/assert"
@@ -45,7 +46,7 @@ func TestRegistrationHandler(t *testing.T) {
 
 				assert.Equal(t, test.wantCode, resp.StatusCode())
 				if test.mockErrorReturn == nil {
-					claims, err := security.GetClaims(getTokenFromResponse(resp), security.AuthSecretKey)
+					claims, err := security.GetClaims(getTokenFromResponse(resp), config.AuthKey)
 					assert.NoError(t, err)
 					assert.True(t, security.CheckUserSession(claims.SessionID))
 				}

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"github.com/faust8888/gophermart/internal/gophermart/config"
 	"github.com/faust8888/gophermart/internal/gophermart/repository/postgres"
 	"github.com/faust8888/gophermart/internal/gophermart/security"
 	"github.com/stretchr/testify/assert"
@@ -49,7 +50,7 @@ func TestLoginHandler(t *testing.T) {
 				if test.wantCode == http.StatusOK {
 					assert.NotEmpty(t, token)
 
-					claims, err := security.GetClaims(token, security.AuthSecretKey)
+					claims, err := security.GetClaims(token, config.AuthKey)
 					assert.NoError(t, err)
 
 					assert.True(t, security.CheckUserSession(claims.SessionID))

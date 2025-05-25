@@ -22,7 +22,7 @@ func (r *GetBalance) GetUserBalance(res http.ResponseWriter, req *http.Request) 
 
 	balance, err := r.balanceService.FindCurrentBalance(claims.Login)
 	if err != nil {
-		logger.Log.Error("Failed to get current balance", zap.Error(err))
+		logger.Log.Error("Failed to get current balance", zap.Error(err), zap.String("login", claims.Login))
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}

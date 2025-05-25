@@ -11,7 +11,6 @@ import (
 const (
 	TokenExp               = time.Hour * 3
 	AuthorizationTokenName = "Authorization"
-	AuthSecretKey          = "secret"
 )
 
 var session = map[string]*jwt.NumericDate{}

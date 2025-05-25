@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/faust8888/gophermart/internal/gophermart/config"
 	"github.com/faust8888/gophermart/internal/gophermart/model"
 	"github.com/faust8888/gophermart/internal/gophermart/security"
 	"github.com/faust8888/gophermart/internal/gophermart/service"
@@ -45,7 +46,7 @@ func (l *Login) LoginUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	token, err := security.BuildToken(security.AuthSecretKey, loginUserRequest.Login)
+	token, err := security.BuildToken(config.AuthKey, loginUserRequest.Login)
 	if err != nil {
 		logger.Log.Error("Failed to build token", zap.Error(err))
 		http.Error(res, fmt.Sprintf("build token: %s", err.Error()), http.StatusInternalServerError)
