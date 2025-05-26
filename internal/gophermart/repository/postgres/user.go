@@ -12,8 +12,8 @@ type UserRepository struct {
 	db *sql.DB
 }
 
-func (r *UserRepository) CreateUser(login, password string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+func (r *UserRepository) CreateUser(ctx context.Context, login, password string) error {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
 	_, err := r.db.ExecContext(ctx,
@@ -29,8 +29,8 @@ func (r *UserRepository) CreateUser(login, password string) error {
 	return nil
 }
 
-func (r *UserRepository) CheckUser(login, password string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+func (r *UserRepository) CheckUser(ctx context.Context, login, password string) error {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 	query := `
         SELECT id

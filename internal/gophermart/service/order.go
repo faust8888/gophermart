@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -20,8 +21,8 @@ var ErrOrderWithAnotherUserExist = errors.New("order number with another user al
 var ErrOrderWasCreatedBefore = errors.New("order with this number was created before")
 
 type OrderService interface {
-	CreateOrder(userLogin string, orderNumber int64) error
-	FindAllOrders(userLogin string) ([]model.OrderItemResponse, error)
+	CreateOrder(ctx context.Context, userLogin string, orderNumber int64) error
+	FindAllOrders(ctx context.Context, userLogin string) ([]model.OrderItemResponse, error)
 	FetchOrderStatusFromAccrual(asyncJob FetchOrderAccrualStatusJob)
 }
 
@@ -32,17 +33,17 @@ type orderService struct {
 	cfg            *config.Config
 }
 
-func (s *orderService) CreateOrder(userLogin string, orderNumber int64) error {
+func (s *orderService) CreateOrder(ctx context.Context, userLogin string, orderNumber int64) error {
 	tx, err := s.orderRepo.BeginTransaction()
 	if err != nil {
 		return err
 	}
 
 	logger.Log.Info("Creating Order", zap.String("userLogin", userLogin), zap.Int64("orderNumber", orderNumber))
-	err = s.orderRepo.CreateOrder(userLogin, orderNumber)
+	err = s.orderRepo.CreateOrder(ctx, userLogin, orderNumber)
 	if err != nil {
 		if errors.Is(err, postgres.ErrOrderNumberAlreadyExist) {
-			currentUserLogin, findLoginErr := s.orderRepo.FindLoginByOrderNumber(orderNumber)
+			currentUserLogin, findLoginErr := s.orderRepo.FindLoginByOrderNumber(ctx, orderNumber)
 			if findLoginErr != nil {
 				return fmt.Errorf("postgres.OrderRepository.FindLoginByOrderNumber: failed to scan row: %w", findLoginErr)
 			}
@@ -54,7 +55,7 @@ func (s *orderService) CreateOrder(userLogin string, orderNumber int64) error {
 		return err
 	}
 
-	err = s.balanceService.CreateDefaultBalance(userLogin)
+	err = s.balanceService.CreateDefaultBalance(ctx, userLogin)
 	if err != nil {
 		if err = s.orderRepo.RollbackTransaction(tx); err != nil {
 			logger.Log.Error("Error rolling back transaction", zap.Error(err))
@@ -68,8 +69,8 @@ func (s *orderService) CreateOrder(userLogin string, orderNumber int64) error {
 	return nil
 }
 
-func (s *orderService) FindAllOrders(userLogin string) ([]model.OrderItemResponse, error) {
-	orders, err := s.orderRepo.FindAllOrders(userLogin)
+func (s *orderService) FindAllOrders(ctx context.Context, userLogin string) ([]model.OrderItemResponse, error) {
+	orders, err := s.orderRepo.FindAllOrders(ctx, userLogin)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +96,10 @@ func (s *orderService) FindAllOrders(userLogin string) ([]model.OrderItemRespons
 }
 
 func (s *orderService) FetchOrderStatusFromAccrual(asyncJob FetchOrderAccrualStatusJob) {
-	orders, err := s.orderRepo.FindAllOrdersForAccrualProcessing(asyncJob.selectLimit)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	orders, err := s.orderRepo.FindAllOrdersForAccrualProcessing(ctx, asyncJob.selectLimit)
 	if err != nil {
 		logger.Log.Error("Couldn't select orders to fetch statuses", zap.Error(err))
 		return
@@ -141,12 +145,12 @@ func (s *orderService) FetchOrderStatusFromAccrual(asyncJob FetchOrderAccrualSta
 			continue
 		}
 
-		err = s.orderRepo.UpdateStatusAndAccrual(orderToUpdate)
+		err = s.orderRepo.UpdateStatusAndAccrual(ctx, orderToUpdate)
 		if err != nil {
 			logger.Log.Error("Error updating orders", zap.Error(err))
 		}
 
-		err = s.balanceService.UpdateBalance(orderToUpdate.UserLogin, *orderToUpdate.Accrual)
+		err = s.balanceService.UpdateBalance(ctx, orderToUpdate.UserLogin, *orderToUpdate.Accrual)
 		if err != nil {
 			logger.Log.Error("Error updating orders", zap.Error(err))
 			if err = s.orderRepo.RollbackTransaction(tx); err != nil {
@@ -209,11 +213,11 @@ func toAccrualStatus(orderStatus string) (string, error) {
 }
 
 type OrderRepository interface {
-	CreateOrder(userLogin string, orderNumber int64) error
-	FindLoginByOrderNumber(orderNumber int64) (string, error)
-	FindAllOrdersForAccrualProcessing(selectLimit int) ([]model.OrderEntity, error)
-	FindAllOrders(userLogin string) ([]model.OrderEntity, error)
-	UpdateStatusAndAccrual(order model.OrderEntity) error
+	CreateOrder(ctx context.Context, userLogin string, orderNumber int64) error
+	FindLoginByOrderNumber(ctx context.Context, orderNumber int64) (string, error)
+	FindAllOrdersForAccrualProcessing(ctx context.Context, selectLimit int) ([]model.OrderEntity, error)
+	FindAllOrders(ctx context.Context, userLogin string) ([]model.OrderEntity, error)
+	UpdateStatusAndAccrual(ctx context.Context, order model.OrderEntity) error
 	BeginTransaction() (*sql.Tx, error)
 	CommitTransaction(tx *sql.Tx) error
 	RollbackTransaction(tx *sql.Tx) error

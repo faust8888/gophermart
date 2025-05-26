@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	model "github.com/faust8888/gophermart/internal/gophermart/model"
@@ -35,44 +36,44 @@ func (m *MockBalanceRepository) EXPECT() *MockBalanceRepositoryMockRecorder {
 }
 
 // CreateDefaultBalance mocks base method.
-func (m *MockBalanceRepository) CreateDefaultBalance(arg0 string) error {
+func (m *MockBalanceRepository) CreateDefaultBalance(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateDefaultBalance", arg0)
+	ret := m.ctrl.Call(m, "CreateDefaultBalance", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateDefaultBalance indicates an expected call of CreateDefaultBalance.
-func (mr *MockBalanceRepositoryMockRecorder) CreateDefaultBalance(arg0 interface{}) *gomock.Call {
+func (mr *MockBalanceRepositoryMockRecorder) CreateDefaultBalance(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDefaultBalance", reflect.TypeOf((*MockBalanceRepository)(nil).CreateDefaultBalance), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDefaultBalance", reflect.TypeOf((*MockBalanceRepository)(nil).CreateDefaultBalance), arg0, arg1)
 }
 
 // FindCurrentBalance mocks base method.
-func (m *MockBalanceRepository) FindCurrentBalance(arg0 string) (*model.BalanceEntity, error) {
+func (m *MockBalanceRepository) FindCurrentBalance(arg0 context.Context, arg1 string) (*model.BalanceEntity, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindCurrentBalance", arg0)
+	ret := m.ctrl.Call(m, "FindCurrentBalance", arg0, arg1)
 	ret0, _ := ret[0].(*model.BalanceEntity)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindCurrentBalance indicates an expected call of FindCurrentBalance.
-func (mr *MockBalanceRepositoryMockRecorder) FindCurrentBalance(arg0 interface{}) *gomock.Call {
+func (mr *MockBalanceRepositoryMockRecorder) FindCurrentBalance(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCurrentBalance", reflect.TypeOf((*MockBalanceRepository)(nil).FindCurrentBalance), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCurrentBalance", reflect.TypeOf((*MockBalanceRepository)(nil).FindCurrentBalance), arg0, arg1)
 }
 
 // UpdateBalance mocks base method.
-func (m *MockBalanceRepository) UpdateBalance(arg0 string, arg1 float32) error {
+func (m *MockBalanceRepository) UpdateBalance(arg0 context.Context, arg1 string, arg2 float32) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateBalance", arg0, arg1)
+	ret := m.ctrl.Call(m, "UpdateBalance", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateBalance indicates an expected call of UpdateBalance.
-func (mr *MockBalanceRepositoryMockRecorder) UpdateBalance(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockBalanceRepositoryMockRecorder) UpdateBalance(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBalance", reflect.TypeOf((*MockBalanceRepository)(nil).UpdateBalance), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBalance", reflect.TypeOf((*MockBalanceRepository)(nil).UpdateBalance), arg0, arg1, arg2)
 }

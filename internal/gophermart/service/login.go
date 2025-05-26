@@ -1,15 +1,17 @@
 package service
 
+import "context"
+
 type LoginService interface {
-	Login(login, password string) error
+	Login(ctx context.Context, login, password string) error
 }
 
 type loginService struct {
 	repo UserRepository
 }
 
-func (l *loginService) Login(login, password string) error {
-	return l.repo.CheckUser(login, password)
+func (l *loginService) Login(ctx context.Context, login, password string) error {
+	return l.repo.CheckUser(ctx, login, password)
 }
 
 func NewLoginService(repo UserRepository) LoginService {

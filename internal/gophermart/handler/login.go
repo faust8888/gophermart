@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/faust8888/gophermart/internal/gophermart/config"
@@ -10,6 +11,7 @@ import (
 	"github.com/faust8888/gophermart/internal/middleware/logger"
 	"go.uber.org/zap"
 	"net/http"
+	"time"
 )
 
 const UserLoginHandlerPath = "/api/user/login"
@@ -39,7 +41,9 @@ func (l *Login) LoginUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = l.loginService.Login(loginUserRequest.Login, loginUserRequest.Password)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	err = l.loginService.Login(ctx, loginUserRequest.Login, loginUserRequest.Password)
 	if err != nil {
 		logger.Log.Error("Failed to login", zap.Error(err))
 		http.Error(res, err.Error(), http.StatusUnauthorized)

@@ -12,8 +12,8 @@ type BalanceRepository struct {
 	db *sql.DB
 }
 
-func (b *BalanceRepository) CreateDefaultBalance(userLogin string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+func (b *BalanceRepository) CreateDefaultBalance(ctx context.Context, userLogin string) error {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
 	query := `INSERT INTO balance (user_login, withdrawn_sum, current_sum) VALUES ($1, 0, 0)`
@@ -27,20 +27,22 @@ func (b *BalanceRepository) CreateDefaultBalance(userLogin string) error {
 	return nil
 }
 
-func (b *BalanceRepository) UpdateBalance(userLogin string, sum float32) error {
+func (b *BalanceRepository) UpdateBalance(ctx context.Context, userLogin string, sum float32) error {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
 	query := `
        UPDATE "balance"
            SET current_sum = $1 + balance.current_sum
        WHERE user_login = $2`
-	_, err := b.db.Exec(query, sum, userLogin)
+	_, err := b.db.ExecContext(ctx, query, sum, userLogin)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (b *BalanceRepository) FindCurrentBalance(userLogin string) (*model.BalanceEntity, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+func (b *BalanceRepository) FindCurrentBalance(ctx context.Context, userLogin string) (*model.BalanceEntity, error) {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 	query := `
         SELECT id, user_login, withdrawn_sum, current_sum, created_at

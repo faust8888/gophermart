@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/faust8888/gophermart/internal/gophermart/model"
@@ -10,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 const WithdrawHandlerPath = "/api/user/balance/withdraw"
@@ -47,7 +49,9 @@ func (r *Withdraw) WithdrawSum(res http.ResponseWriter, req *http.Request) {
 
 	orderNumber, _ := strconv.ParseInt(withdrawRequest.Order, 10, 64)
 
-	err = r.withdrawService.Withdraw(claims.Login, orderNumber, withdrawRequest.Sum)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	err = r.withdrawService.Withdraw(ctx, claims.Login, orderNumber, withdrawRequest.Sum)
 	if err != nil {
 		if errors.Is(err, postgres.ErrNotEnoughBalance) {
 			logger.Log.Error("Not enough balance to withdraw", zap.Error(err))

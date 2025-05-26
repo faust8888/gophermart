@@ -4,6 +4,7 @@ import (
 	"github.com/faust8888/gophermart/internal/gophermart/model"
 	"github.com/faust8888/gophermart/internal/gophermart/repository/postgres"
 	"github.com/faust8888/gophermart/internal/gophermart/security"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -13,6 +14,8 @@ import (
 func TestFindAllOrderHandler(t *testing.T) {
 	srv := startTestServer(t)
 	defer srv.server.Close()
+
+	ctx := gomock.Any()
 
 	tests := []struct {
 		name            string
@@ -47,7 +50,7 @@ func TestFindAllOrderHandler(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			{
-				srv.mockOrderRepository.EXPECT().FindAllOrders(test.userLogin).Return(test.ordersReturn, test.mockErrorReturn)
+				srv.mockOrderRepository.EXPECT().FindAllOrders(ctx, test.userLogin).Return(test.ordersReturn, test.mockErrorReturn)
 				req := createGetRequest(
 					srv.GetFullPath(GetOrderHandlerPath),
 				)

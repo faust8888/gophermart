@@ -5,6 +5,7 @@ import (
 	"github.com/faust8888/gophermart/internal/gophermart/config"
 	"github.com/faust8888/gophermart/internal/gophermart/repository/postgres"
 	"github.com/faust8888/gophermart/internal/gophermart/security"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -13,6 +14,8 @@ import (
 func TestRegistrationHandler(t *testing.T) {
 	srv := startTestServer(t)
 	defer srv.server.Close()
+
+	ctx := gomock.Any()
 
 	tests := []struct {
 		name            string
@@ -40,7 +43,7 @@ func TestRegistrationHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			{
 				body := fmt.Sprintf(`{"login": "%s", "password": "%s"}`, test.login, test.password)
-				srv.mockUserRepository.EXPECT().CreateUser(test.login, test.password).Return(test.mockErrorReturn)
+				srv.mockUserRepository.EXPECT().CreateUser(ctx, test.login, test.password).Return(test.mockErrorReturn)
 
 				resp, _ := createPostRequest(srv.GetFullPath(UserRegisterHandlerPath), body).Send()
 
@@ -59,9 +62,10 @@ func TestRegistration_WithEmptyLogin(t *testing.T) {
 	srv := startTestServer(t)
 	defer srv.server.Close()
 
+	ctx := gomock.Any()
 	emptyLogin, password := "", "qwerty123"
 	body := fmt.Sprintf(`{"login": "%s", "password": "%s"}`, emptyLogin, password)
-	srv.mockUserRepository.EXPECT().CreateUser(emptyLogin, password).AnyTimes().Return(nil)
+	srv.mockUserRepository.EXPECT().CreateUser(ctx, emptyLogin, password).AnyTimes().Return(nil)
 
 	resp, _ := createPostRequest(srv.GetFullPath(UserRegisterHandlerPath), body).Send()
 

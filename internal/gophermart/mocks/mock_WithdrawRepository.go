@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	model "github.com/faust8888/gophermart/internal/gophermart/model"
@@ -35,30 +36,30 @@ func (m *MockWithdrawRepository) EXPECT() *MockWithdrawRepositoryMockRecorder {
 }
 
 // FindAllHistoryWithdraws mocks base method.
-func (m *MockWithdrawRepository) FindAllHistoryWithdraws(arg0 string) ([]model.WithdrawHistoryItemResponse, error) {
+func (m *MockWithdrawRepository) FindAllHistoryWithdraws(arg0 context.Context, arg1 string) ([]model.WithdrawHistoryItemResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAllHistoryWithdraws", arg0)
+	ret := m.ctrl.Call(m, "FindAllHistoryWithdraws", arg0, arg1)
 	ret0, _ := ret[0].([]model.WithdrawHistoryItemResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindAllHistoryWithdraws indicates an expected call of FindAllHistoryWithdraws.
-func (mr *MockWithdrawRepositoryMockRecorder) FindAllHistoryWithdraws(arg0 interface{}) *gomock.Call {
+func (mr *MockWithdrawRepositoryMockRecorder) FindAllHistoryWithdraws(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllHistoryWithdraws", reflect.TypeOf((*MockWithdrawRepository)(nil).FindAllHistoryWithdraws), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllHistoryWithdraws", reflect.TypeOf((*MockWithdrawRepository)(nil).FindAllHistoryWithdraws), arg0, arg1)
 }
 
 // Withdraw mocks base method.
-func (m *MockWithdrawRepository) Withdraw(arg0 string, arg1 int64, arg2 float32) error {
+func (m *MockWithdrawRepository) Withdraw(arg0 context.Context, arg1 string, arg2 int64, arg3 float32) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Withdraw", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "Withdraw", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Withdraw indicates an expected call of Withdraw.
-func (mr *MockWithdrawRepositoryMockRecorder) Withdraw(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockWithdrawRepositoryMockRecorder) Withdraw(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Withdraw", reflect.TypeOf((*MockWithdrawRepository)(nil).Withdraw), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Withdraw", reflect.TypeOf((*MockWithdrawRepository)(nil).Withdraw), arg0, arg1, arg2, arg3)
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/faust8888/gophermart/internal/gophermart/repository/postgres"
 	"github.com/faust8888/gophermart/internal/gophermart/security"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -12,6 +13,8 @@ import (
 func TestWithdrawHandler(t *testing.T) {
 	srv := startTestServer(t)
 	defer srv.server.Close()
+
+	ctx := gomock.Any()
 
 	tests := []struct {
 		name            string
@@ -41,7 +44,7 @@ func TestWithdrawHandler(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			{
-				srv.mockWithdrawRepository.EXPECT().Withdraw(test.userLogin, test.orderNumber, test.withdrawSum).Return(test.mockErrorReturn)
+				srv.mockWithdrawRepository.EXPECT().Withdraw(ctx, test.userLogin, test.orderNumber, test.withdrawSum).Return(test.mockErrorReturn)
 
 				body := fmt.Sprintf(`{"order": "%d", "sum": %f}`, test.orderNumber, test.withdrawSum)
 				req := createPostRequest(

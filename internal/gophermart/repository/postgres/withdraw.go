@@ -15,8 +15,8 @@ type WithdrawRepository struct {
 	db *sql.DB
 }
 
-func (w *WithdrawRepository) Withdraw(login string, order int64, sum float32) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+func (w *WithdrawRepository) Withdraw(ctx context.Context, login string, order int64, sum float32) error {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
 	txn, err := w.db.Begin()
@@ -58,8 +58,8 @@ func (w *WithdrawRepository) Withdraw(login string, order int64, sum float32) er
 	return nil
 }
 
-func (w *WithdrawRepository) FindAllHistoryWithdraws(login string) ([]model.WithdrawHistoryItemResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+func (w *WithdrawRepository) FindAllHistoryWithdraws(ctx context.Context, login string) ([]model.WithdrawHistoryItemResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
 	rows, err := w.db.QueryContext(ctx, `SELECT order_number, sum, created_at FROM withdraw_history WHERE user_login = $1 ORDER BY created_at`, login)

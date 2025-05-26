@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"github.com/faust8888/gophermart/internal/middleware/logger"
 	"go.uber.org/zap"
 	"net/http"
+	"time"
 )
 
 const UserRegisterHandlerPath = "/api/user/register"
@@ -41,7 +43,9 @@ func (r *Register) RegisterUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = r.registerService.Register(registerUserRequest.Login, registerUserRequest.Password)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	err = r.registerService.Register(ctx, registerUserRequest.Login, registerUserRequest.Password)
 	if err != nil {
 		if errors.Is(err, postgres.ErrLoginUniqueViolation) {
 			logger.Log.Info("Failed to register user. User already exists", zap.Error(err))

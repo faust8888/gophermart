@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/faust8888/gophermart/internal/gophermart/repository/postgres"
@@ -8,6 +9,7 @@ import (
 	"github.com/faust8888/gophermart/internal/middleware/logger"
 	"go.uber.org/zap"
 	"net/http"
+	"time"
 )
 
 const GetOrderHandlerPath = "/api/user/orders"
@@ -23,7 +25,9 @@ func (r *FindOrders) FindAllOrders(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	orders, errNew := r.findOrderService.FindAllOrders(claims.Login)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	orders, errNew := r.findOrderService.FindAllOrders(ctx, claims.Login)
 	if errNew != nil {
 		if errors.Is(errNew, postgres.ErrOrdersNotExist) {
 			logger.Log.Error("Orders do not exist for the user",

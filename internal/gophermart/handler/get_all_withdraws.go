@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/faust8888/gophermart/internal/gophermart/service"
 	"github.com/faust8888/gophermart/internal/middleware/logger"
 	"go.uber.org/zap"
 	"net/http"
+	"time"
 )
 
 type GetAllWithdraws struct {
@@ -19,7 +21,9 @@ func (r *GetAllWithdraws) GetAllHistoryWithdraws(res http.ResponseWriter, req *h
 		return
 	}
 
-	withdraws, err := r.withdrawHistoryService.FindAllHistoryWithdraws(claims.Login)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	withdraws, err := r.withdrawHistoryService.FindAllHistoryWithdraws(ctx, claims.Login)
 	if err != nil {
 		logger.Log.Error("Error getting withdraws", zap.Error(err))
 		http.Error(res, err.Error(), http.StatusInternalServerError)

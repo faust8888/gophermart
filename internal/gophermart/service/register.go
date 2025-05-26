@@ -1,15 +1,17 @@
 package service
 
+import "context"
+
 type RegisterService interface {
-	Register(login, password string) error
+	Register(ctx context.Context, login, password string) error
 }
 
 type registerService struct {
 	repo UserRepository
 }
 
-func (s *registerService) Register(login, password string) error {
-	return s.repo.CreateUser(login, password)
+func (s *registerService) Register(ctx context.Context, login, password string) error {
+	return s.repo.CreateUser(ctx, login, password)
 }
 
 func NewRegisterService(repo UserRepository) RegisterService {
@@ -17,6 +19,6 @@ func NewRegisterService(repo UserRepository) RegisterService {
 }
 
 type UserRepository interface {
-	CreateUser(login, password string) error
-	CheckUser(login, password string) error
+	CreateUser(ctx context.Context, login, password string) error
+	CheckUser(ctx context.Context, login, password string) error
 }

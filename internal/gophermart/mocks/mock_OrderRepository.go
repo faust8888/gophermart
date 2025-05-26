@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	context "context"
 	sql "database/sql"
 	reflect "reflect"
 
@@ -65,62 +66,62 @@ func (mr *MockOrderRepositoryMockRecorder) CommitTransaction(arg0 interface{}) *
 }
 
 // CreateOrder mocks base method.
-func (m *MockOrderRepository) CreateOrder(arg0 string, arg1 int64) error {
+func (m *MockOrderRepository) CreateOrder(arg0 context.Context, arg1 string, arg2 int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrder", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreateOrder", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateOrder indicates an expected call of CreateOrder.
-func (mr *MockOrderRepositoryMockRecorder) CreateOrder(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockOrderRepositoryMockRecorder) CreateOrder(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrder", reflect.TypeOf((*MockOrderRepository)(nil).CreateOrder), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrder", reflect.TypeOf((*MockOrderRepository)(nil).CreateOrder), arg0, arg1, arg2)
 }
 
 // FindAllOrders mocks base method.
-func (m *MockOrderRepository) FindAllOrders(arg0 string) ([]model.OrderEntity, error) {
+func (m *MockOrderRepository) FindAllOrders(arg0 context.Context, arg1 string) ([]model.OrderEntity, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAllOrders", arg0)
+	ret := m.ctrl.Call(m, "FindAllOrders", arg0, arg1)
 	ret0, _ := ret[0].([]model.OrderEntity)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindAllOrders indicates an expected call of FindAllOrders.
-func (mr *MockOrderRepositoryMockRecorder) FindAllOrders(arg0 interface{}) *gomock.Call {
+func (mr *MockOrderRepositoryMockRecorder) FindAllOrders(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllOrders", reflect.TypeOf((*MockOrderRepository)(nil).FindAllOrders), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllOrders", reflect.TypeOf((*MockOrderRepository)(nil).FindAllOrders), arg0, arg1)
 }
 
 // FindAllOrdersForAccrualProcessing mocks base method.
-func (m *MockOrderRepository) FindAllOrdersForAccrualProcessing(arg0 int) ([]model.OrderEntity, error) {
+func (m *MockOrderRepository) FindAllOrdersForAccrualProcessing(arg0 context.Context, arg1 int) ([]model.OrderEntity, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAllOrdersForAccrualProcessing", arg0)
+	ret := m.ctrl.Call(m, "FindAllOrdersForAccrualProcessing", arg0, arg1)
 	ret0, _ := ret[0].([]model.OrderEntity)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindAllOrdersForAccrualProcessing indicates an expected call of FindAllOrdersForAccrualProcessing.
-func (mr *MockOrderRepositoryMockRecorder) FindAllOrdersForAccrualProcessing(arg0 interface{}) *gomock.Call {
+func (mr *MockOrderRepositoryMockRecorder) FindAllOrdersForAccrualProcessing(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllOrdersForAccrualProcessing", reflect.TypeOf((*MockOrderRepository)(nil).FindAllOrdersForAccrualProcessing), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllOrdersForAccrualProcessing", reflect.TypeOf((*MockOrderRepository)(nil).FindAllOrdersForAccrualProcessing), arg0, arg1)
 }
 
 // FindLoginByOrderNumber mocks base method.
-func (m *MockOrderRepository) FindLoginByOrderNumber(arg0 int64) (string, error) {
+func (m *MockOrderRepository) FindLoginByOrderNumber(arg0 context.Context, arg1 int64) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindLoginByOrderNumber", arg0)
+	ret := m.ctrl.Call(m, "FindLoginByOrderNumber", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindLoginByOrderNumber indicates an expected call of FindLoginByOrderNumber.
-func (mr *MockOrderRepositoryMockRecorder) FindLoginByOrderNumber(arg0 interface{}) *gomock.Call {
+func (mr *MockOrderRepositoryMockRecorder) FindLoginByOrderNumber(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLoginByOrderNumber", reflect.TypeOf((*MockOrderRepository)(nil).FindLoginByOrderNumber), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLoginByOrderNumber", reflect.TypeOf((*MockOrderRepository)(nil).FindLoginByOrderNumber), arg0, arg1)
 }
 
 // RollbackTransaction mocks base method.
@@ -138,15 +139,15 @@ func (mr *MockOrderRepositoryMockRecorder) RollbackTransaction(arg0 interface{})
 }
 
 // UpdateStatusAndAccrual mocks base method.
-func (m *MockOrderRepository) UpdateStatusAndAccrual(arg0 model.OrderEntity) error {
+func (m *MockOrderRepository) UpdateStatusAndAccrual(arg0 context.Context, arg1 model.OrderEntity) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateStatusAndAccrual", arg0)
+	ret := m.ctrl.Call(m, "UpdateStatusAndAccrual", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateStatusAndAccrual indicates an expected call of UpdateStatusAndAccrual.
-func (mr *MockOrderRepositoryMockRecorder) UpdateStatusAndAccrual(arg0 interface{}) *gomock.Call {
+func (mr *MockOrderRepositoryMockRecorder) UpdateStatusAndAccrual(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatusAndAccrual", reflect.TypeOf((*MockOrderRepository)(nil).UpdateStatusAndAccrual), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatusAndAccrual", reflect.TypeOf((*MockOrderRepository)(nil).UpdateStatusAndAccrual), arg0, arg1)
 }

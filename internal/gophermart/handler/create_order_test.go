@@ -13,6 +13,8 @@ func TestNewCreateOrderHandler(t *testing.T) {
 	srv := startTestServer(t)
 	defer srv.server.Close()
 
+	ctx := gomock.Any()
+
 	tests := []struct {
 		name            string
 		orderNumber     int64
@@ -32,8 +34,8 @@ func TestNewCreateOrderHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			{
 				srv.mockOrderRepository.EXPECT().BeginTransaction()
-				srv.mockOrderRepository.EXPECT().CreateOrder(test.userLogin, test.orderNumber).Return(test.mockErrorReturn)
-				srv.mockBalanceRepository.EXPECT().CreateDefaultBalance(test.userLogin)
+				srv.mockOrderRepository.EXPECT().CreateOrder(ctx, test.userLogin, test.orderNumber).Return(test.mockErrorReturn)
+				srv.mockBalanceRepository.EXPECT().CreateDefaultBalance(ctx, test.userLogin)
 				srv.mockOrderRepository.EXPECT().CommitTransaction(gomock.Any())
 
 				body := strconv.FormatInt(test.orderNumber, 10)

@@ -76,13 +76,14 @@ func getTokenFromResponse(res *resty.Response) string {
 }
 
 func registrationAndAuthentication(t *testing.T, srv *testServer, login string) string {
+	ctx := gomock.Any()
 	registerBody := fmt.Sprintf(`{"login": "%s", "password": "%s"}`, login, "password")
-	srv.mockUserRepository.EXPECT().CreateUser(login, "password").Return(nil)
+	srv.mockUserRepository.EXPECT().CreateUser(ctx, login, "password").Return(nil)
 	resp, _ := createPostRequest(srv.GetFullPath(UserRegisterHandlerPath), registerBody).Send()
 	assert.Equal(t, http.StatusOK, resp.StatusCode())
 
 	loginBody := fmt.Sprintf(`{"login": "%s", "password": "%s"}`, login, "password")
-	srv.mockUserRepository.EXPECT().CheckUser(login, "password").Return(nil)
+	srv.mockUserRepository.EXPECT().CheckUser(ctx, login, "password").Return(nil)
 	resp, _ = createPostRequest(srv.GetFullPath(UserLoginHandlerPath), loginBody).Send()
 	assert.Equal(t, http.StatusOK, resp.StatusCode())
 

@@ -1,15 +1,16 @@
 package service
 
 import (
+	"context"
 	"github.com/faust8888/gophermart/internal/gophermart/model"
 )
 
 type WithdrawService interface {
-	Withdraw(login string, order int64, sum float32) error
+	Withdraw(ctx context.Context, login string, order int64, sum float32) error
 }
 
 type WithdrawHistoryService interface {
-	FindAllHistoryWithdraws(login string) ([]model.WithdrawHistoryItemResponse, error)
+	FindAllHistoryWithdraws(ctx context.Context, login string) ([]model.WithdrawHistoryItemResponse, error)
 }
 
 type withdrawService struct {
@@ -21,12 +22,12 @@ type withdrawHistoryService struct {
 	withdrawRepo WithdrawRepository
 }
 
-func (s *withdrawService) Withdraw(login string, orderNumber int64, sum float32) error {
-	return s.withdrawRepo.Withdraw(login, orderNumber, sum)
+func (s *withdrawService) Withdraw(ctx context.Context, login string, orderNumber int64, sum float32) error {
+	return s.withdrawRepo.Withdraw(ctx, login, orderNumber, sum)
 }
 
-func (s *withdrawHistoryService) FindAllHistoryWithdraws(login string) ([]model.WithdrawHistoryItemResponse, error) {
-	return s.withdrawRepo.FindAllHistoryWithdraws(login)
+func (s *withdrawHistoryService) FindAllHistoryWithdraws(ctx context.Context, login string) ([]model.WithdrawHistoryItemResponse, error) {
+	return s.withdrawRepo.FindAllHistoryWithdraws(ctx, login)
 }
 
 func NewWithdrawService(withdrawRepo WithdrawRepository, orderRepo OrderRepository) WithdrawService {
@@ -38,6 +39,6 @@ func NewWithdrawHistoryService(withdrawRepo WithdrawRepository) WithdrawHistoryS
 }
 
 type WithdrawRepository interface {
-	Withdraw(login string, order int64, sum float32) error
-	FindAllHistoryWithdraws(login string) ([]model.WithdrawHistoryItemResponse, error)
+	Withdraw(ctx context.Context, login string, order int64, sum float32) error
+	FindAllHistoryWithdraws(ctx context.Context, login string) ([]model.WithdrawHistoryItemResponse, error)
 }

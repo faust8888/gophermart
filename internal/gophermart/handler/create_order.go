@@ -1,12 +1,14 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"github.com/faust8888/gophermart/internal/gophermart/service"
 	"github.com/faust8888/gophermart/internal/middleware/logger"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 const CreateOrderHandlerPath = "/api/user/orders"
@@ -42,7 +44,9 @@ func (r *CreateOrder) CreateUserOrder(res http.ResponseWriter, req *http.Request
 		return
 	}
 
-	err = r.orderService.CreateOrder(claims.Login, orderNumber)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	err = r.orderService.CreateOrder(ctx, claims.Login, orderNumber)
 	if err != nil {
 		if errors.Is(err, service.ErrOrderWasCreatedBefore) {
 			logger.Log.Error("Order was created before with the same user", zap.Error(err))

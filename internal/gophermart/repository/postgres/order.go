@@ -13,8 +13,8 @@ type OrderRepository struct {
 	db *sql.DB
 }
 
-func (r *OrderRepository) CreateOrder(userLogin string, orderNumber int64) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+func (r *OrderRepository) CreateOrder(ctx context.Context, userLogin string, orderNumber int64) error {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
 	query := `INSERT INTO "order" (user_login, order_number, status) VALUES ($1, $2, $3)`
@@ -31,8 +31,8 @@ func (r *OrderRepository) CreateOrder(userLogin string, orderNumber int64) error
 	return nil
 }
 
-func (r *OrderRepository) FindLoginByOrderNumber(orderNumber int64) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+func (r *OrderRepository) FindLoginByOrderNumber(ctx context.Context, orderNumber int64) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 	query := `
         SELECT user_login
@@ -62,8 +62,8 @@ func (r *OrderRepository) FindLoginByOrderNumber(orderNumber int64) (string, err
 	return userLogin, nil
 }
 
-func (r *OrderRepository) FindAllOrders(userLogin string) ([]model.OrderEntity, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+func (r *OrderRepository) FindAllOrders(ctx context.Context, userLogin string) ([]model.OrderEntity, error) {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 	rows, err := r.db.QueryContext(ctx, `SELECT id, user_login, order_number, status, accrual, created_at FROM "order" WHERE user_login = $1 ORDER BY created_at`, userLogin)
 	if err != nil {
@@ -90,8 +90,8 @@ func (r *OrderRepository) FindAllOrders(userLogin string) ([]model.OrderEntity, 
 	return orders, nil
 }
 
-func (r *OrderRepository) FindAllOrdersForAccrualProcessing(limit int) ([]model.OrderEntity, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+func (r *OrderRepository) FindAllOrdersForAccrualProcessing(ctx context.Context, limit int) ([]model.OrderEntity, error) {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 	rows, err := r.db.QueryContext(ctx, `SELECT id, user_login, order_number, status, accrual, created_at FROM "order" WHERE status IN ($1, $2) 
                                  ORDER BY created_at LIMIT $3 FOR UPDATE SKIP LOCKED`,
@@ -115,12 +115,14 @@ func (r *OrderRepository) FindAllOrdersForAccrualProcessing(limit int) ([]model.
 	return orders, nil
 }
 
-func (r *OrderRepository) UpdateStatusAndAccrual(order model.OrderEntity) error {
+func (r *OrderRepository) UpdateStatusAndAccrual(ctx context.Context, order model.OrderEntity) error {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
 	query := `
        UPDATE "order"
            SET status = $1, accrual = $2
        WHERE id = $3`
-	_, err := r.db.Exec(query, order.Status, order.Accrual, order.ID)
+	_, err := r.db.ExecContext(ctx, query, order.Status, order.Accrual, order.ID)
 	if err != nil {
 		return err
 	}
