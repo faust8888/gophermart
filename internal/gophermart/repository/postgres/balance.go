@@ -17,11 +17,10 @@ func (b *BalanceRepository) CreateDefaultBalance(ctx context.Context, userLogin 
 	defer cancel()
 
 	query := `INSERT INTO balance (user_login, withdrawn_sum, current_sum) VALUES ($1, 0, 0)`
-
 	_, err := b.db.ExecContext(ctx, query, userLogin)
 
 	if err != nil {
-		return fmt.Errorf("repository.postgres: couldn't create new order - %w", err)
+		return fmt.Errorf("postgres.BalanceRepository.CreateDefaultBalance: %w", err)
 	}
 
 	return nil
@@ -30,28 +29,25 @@ func (b *BalanceRepository) CreateDefaultBalance(ctx context.Context, userLogin 
 func (b *BalanceRepository) UpdateBalance(ctx context.Context, userLogin string, sum float32) error {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
-	query := `
-       UPDATE "balance"
-           SET current_sum = $1 + balance.current_sum
-       WHERE user_login = $2`
+
+	query := `UPDATE "balance" SET current_sum = $1 + balance.current_sum WHERE user_login = $2`
 	_, err := b.db.ExecContext(ctx, query, sum, userLogin)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("postgres.BalanceRepository.UpdateBalance: %w", err)
 	}
+
 	return nil
 }
 
 func (b *BalanceRepository) FindCurrentBalance(ctx context.Context, userLogin string) (*model.BalanceEntity, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
-	query := `
-        SELECT id, user_login, withdrawn_sum, current_sum, created_at
-        FROM balance
-        WHERE user_login = $1`
 
+	query := `SELECT id, user_login, withdrawn_sum, current_sum, created_at FROM balance WHERE user_login = $1`
 	rows, err := b.db.QueryContext(ctx, query, userLogin)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("postgres.BalanceRepository.FindCurrentBalance: %w", err)
 	}
 	defer rows.Close()
 
@@ -61,7 +57,7 @@ func (b *BalanceRepository) FindCurrentBalance(ctx context.Context, userLogin st
 
 	var balanceEntity model.BalanceEntity
 	if err = rows.Scan(&balanceEntity.ID, &balanceEntity.UserLogin, &balanceEntity.WithdrawnSum, &balanceEntity.CurrentSum, &balanceEntity.CreatedAt); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("postgres.BalanceRepository.FindCurrentBalance: couldn't scan rows - %w", err)
 	}
 
 	if err = rows.Err(); err != nil {

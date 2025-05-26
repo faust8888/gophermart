@@ -18,14 +18,13 @@ func (r *OrderRepository) CreateOrder(ctx context.Context, userLogin string, ord
 	defer cancel()
 
 	query := `INSERT INTO "order" (user_login, order_number, status) VALUES ($1, $2, $3)`
-
 	_, err := r.db.ExecContext(ctx, query, userLogin, orderNumber, model.NewOrderStatus)
 
 	if err != nil {
 		if errorIs(err, pgerrors.UniqueViolation) {
 			return ErrOrderNumberAlreadyExist
 		}
-		return fmt.Errorf("repository.postgres: couldn't create new order - %w", err)
+		return fmt.Errorf("postgres.OrderRepository.CreateOrder: %w", err)
 	}
 
 	return nil
@@ -34,15 +33,11 @@ func (r *OrderRepository) CreateOrder(ctx context.Context, userLogin string, ord
 func (r *OrderRepository) FindLoginByOrderNumber(ctx context.Context, orderNumber int64) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
-	query := `
-        SELECT user_login
-        FROM "order"
-        WHERE order_number = $1
-    `
 
+	query := `SELECT user_login FROM "order"WHERE order_number = $1`
 	rows, err := r.db.QueryContext(ctx, query, orderNumber)
 	if err != nil {
-		return "", fmt.Errorf("postgres.repository.FindLoginByOrderNumber: %w", err)
+		return "", fmt.Errorf("postgres.OrderRepository.FindLoginByOrderNumber: %w", err)
 	}
 	defer rows.Close()
 
@@ -52,11 +47,11 @@ func (r *OrderRepository) FindLoginByOrderNumber(ctx context.Context, orderNumbe
 
 	var userLogin string
 	if err = rows.Scan(&userLogin); err != nil {
-		return "", fmt.Errorf("postgres.repository.FindLoginByOrderNumber: failed to scan row: %w", err)
+		return "", fmt.Errorf("postgres.OrderRepository.FindLoginByOrderNumber: failed to scan row: %w", err)
 	}
 
 	if err = rows.Err(); err != nil {
-		return "", fmt.Errorf("postgres.repository.FindLoginByOrderNumber: error during row iteration: %w", err)
+		return "", fmt.Errorf("postgres.OrderRepository.FindLoginByOrderNumber: error during row iteration: %w", err)
 	}
 
 	return userLogin, nil
@@ -65,12 +60,14 @@ func (r *OrderRepository) FindLoginByOrderNumber(ctx context.Context, orderNumbe
 func (r *OrderRepository) FindAllOrders(ctx context.Context, userLogin string) ([]model.OrderEntity, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
+
 	rows, err := r.db.QueryContext(ctx, `SELECT id, user_login, order_number, status, accrual, created_at FROM "order" WHERE user_login = $1 ORDER BY created_at`, userLogin)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("postgres.OrderRepository.FindAllOrders: %w", err)
 	}
+
 	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("postgres.repository.FindAllOrders: error during row iteration: %w", err)
+		return nil, fmt.Errorf("postgres.OrderRepository.FindAllOrders: error during row iteration - %w", err)
 	}
 	defer rows.Close()
 
@@ -79,7 +76,7 @@ func (r *OrderRepository) FindAllOrders(ctx context.Context, userLogin string) (
 	for rows.Next() {
 		var order model.OrderEntity
 		if err = rows.Scan(&order.ID, &order.UserLogin, &order.OrderNumber, &order.Status, &order.Accrual, &order.CreatedAt); err != nil {
-			return nil, fmt.Errorf("postgres.repository.FindAllOrders: %w", err)
+			return nil, fmt.Errorf("postgres.OrderRepository.FindAllOrders: couldn't scan row - %w", err)
 		}
 		hasRows = true
 		orders = append(orders, order)
@@ -93,14 +90,18 @@ func (r *OrderRepository) FindAllOrders(ctx context.Context, userLogin string) (
 func (r *OrderRepository) FindAllOrdersForAccrualProcessing(ctx context.Context, limit int) ([]model.OrderEntity, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
-	rows, err := r.db.QueryContext(ctx, `SELECT id, user_login, order_number, status, accrual, created_at FROM "order" WHERE status IN ($1, $2) 
-                                 ORDER BY created_at LIMIT $3 FOR UPDATE SKIP LOCKED`,
-		model.NewOrderStatus, model.ProcessingOrderStatus, limit)
+
+	rows, err := r.db.QueryContext(ctx, `SELECT id, user_login, order_number, status, accrual, created_at 
+                                               FROM "order" WHERE status IN ($1, $2) 
+                                               ORDER BY created_at LIMIT $3 FOR UPDATE SKIP LOCKED`,
+		model.NewOrderStatus, model.ProcessingOrderStatus, limit,
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("postgres.OrderRepository.FindAllOrdersForAccrualProcessing: %w", err)
 	}
+
 	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("postgres.repository.FindAllOrdersForAccrualProcessing: error during row iteration: %w", err)
+		return nil, fmt.Errorf("postgres.OrderRepository.FindAllOrdersForAccrualProcessing: error during row iteration: %w", err)
 	}
 	defer rows.Close()
 
@@ -108,7 +109,7 @@ func (r *OrderRepository) FindAllOrdersForAccrualProcessing(ctx context.Context,
 	for rows.Next() {
 		var order model.OrderEntity
 		if err = rows.Scan(&order.ID, &order.UserLogin, &order.OrderNumber, &order.Status, &order.Accrual, &order.CreatedAt); err != nil {
-			return nil, fmt.Errorf("postgres.repository.FindAllOrdersForAccrualProcessing: %w", err)
+			return nil, fmt.Errorf("postgres.OrderRepository.FindAllOrdersForAccrualProcessing: couldn't scan row - %w", err)
 		}
 		orders = append(orders, order)
 	}
@@ -118,13 +119,12 @@ func (r *OrderRepository) FindAllOrdersForAccrualProcessing(ctx context.Context,
 func (r *OrderRepository) UpdateStatusAndAccrual(ctx context.Context, order model.OrderEntity) error {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
-	query := `
-       UPDATE "order"
-           SET status = $1, accrual = $2
-       WHERE id = $3`
+
+	query := `UPDATE "order" SET status = $1, accrual = $2 WHERE id = $3`
 	_, err := r.db.ExecContext(ctx, query, order.Status, order.Accrual, order.ID)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("postgres.OrderRepository.UpdateStatusAndAccrual: %w", err)
 	}
 	return nil
 }

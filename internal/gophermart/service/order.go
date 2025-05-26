@@ -36,16 +36,15 @@ type orderService struct {
 func (s *orderService) CreateOrder(ctx context.Context, userLogin string, orderNumber int64) error {
 	tx, err := s.orderRepo.BeginTransaction()
 	if err != nil {
-		return err
+		return fmt.Errorf("OrderService:CreateOrder: couldn't open transaction: %w", err)
 	}
 
-	logger.Log.Info("Creating Order", zap.String("userLogin", userLogin), zap.Int64("orderNumber", orderNumber))
 	err = s.orderRepo.CreateOrder(ctx, userLogin, orderNumber)
 	if err != nil {
 		if errors.Is(err, postgres.ErrOrderNumberAlreadyExist) {
 			currentUserLogin, findLoginErr := s.orderRepo.FindLoginByOrderNumber(ctx, orderNumber)
 			if findLoginErr != nil {
-				return fmt.Errorf("postgres.OrderRepository.FindLoginByOrderNumber: failed to scan row: %w", findLoginErr)
+				return fmt.Errorf("OrderService:CreateOrder: couldn't find login by order number: %w", findLoginErr)
 			}
 			if currentUserLogin != userLogin {
 				return ErrOrderWithAnotherUserExist
@@ -64,7 +63,7 @@ func (s *orderService) CreateOrder(ctx context.Context, userLogin string, orderN
 	}
 
 	if err = s.orderRepo.CommitTransaction(tx); err != nil {
-		return err
+		return fmt.Errorf("OrderService:CreateOrder: couldn't commit transaction: %w", err)
 	}
 	return nil
 }
@@ -72,7 +71,7 @@ func (s *orderService) CreateOrder(ctx context.Context, userLogin string, orderN
 func (s *orderService) FindAllOrders(ctx context.Context, userLogin string) ([]model.OrderItemResponse, error) {
 	orders, err := s.orderRepo.FindAllOrders(ctx, userLogin)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("OrderService:FindAllOrders: %w", err)
 	}
 
 	var response []model.OrderItemResponse
@@ -166,7 +165,7 @@ func (s *orderService) FetchOrderStatusFromAccrual(asyncJob FetchOrderAccrualSta
 }
 
 func NewOrderService(orderRepo OrderRepository, balanceService BalanceService, cfg *config.Config) OrderService {
-	wp := NewWorkerPool(1, 1, 5)
+	wp := NewWorkerPool(cfg.WorkerPoolSize, cfg.WorkerPoolScheduleInSeconds, cfg.WorkerPoolSelectLimit)
 	srv := &orderService{orderRepo: orderRepo, balanceService: balanceService, workerPool: wp, cfg: cfg}
 	go wp.Run(srv.FetchOrderStatusFromAccrual)
 	return srv

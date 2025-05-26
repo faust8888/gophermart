@@ -12,22 +12,31 @@ var ErrEnvConfigCreation = errors.New("config creation error via environments")
 var AuthKey string
 
 const (
-	RunAddressFlag            = "a"
-	DatabaseURIFlag           = "d"
-	AccrualSystemAddressFlag  = "r"
-	AuthKeyNameFlag           = "k"
-	RunAddressDefaultValue    = "localhost:8081"
-	DatabaseURIDefaultValue   = "postgres://localhost:5432/postgres?sslmode=disable"
-	AccrualSystemDefaultValue = "http://localhost:8080"
-	AuthKeyDefaultValue       = "secret"
-	GophermartFlagName        = "gophermart"
+	RunAddressFlag                          = "a"
+	DatabaseURIFlag                         = "d"
+	AccrualSystemAddressFlag                = "r"
+	AuthKeyNameFlag                         = "k"
+	WorkerPoolSizeFlag                      = "wps"
+	WorkerPoolSelectLimitFlag               = "wpsl"
+	WorkerPoolScheduleInSecondsFlag         = "wpss"
+	RunAddressDefaultValue                  = "localhost:8081"
+	DatabaseURIDefaultValue                 = "postgres://localhost:5432/postgres?sslmode=disable"
+	AccrualSystemDefaultValue               = "http://localhost:8080"
+	AuthKeyDefaultValue                     = "secret"
+	WorkerPoolSizeDefaultValue              = 1
+	WorkerPoolScheduleInSecondsDefaultValue = 1
+	WorkerPoolSelectLimitDefaultValue       = 5
+	GophermartFlagName                      = "gophermart"
 )
 
 type Config struct {
-	RunAddress           string `env:"RUN_ADDRESS"`
-	DatabaseURI          string `env:"DATABASE_URI"`
-	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
-	AuthKey              string `env:"AUTH_KEY"`
+	RunAddress                  string `env:"RUN_ADDRESS"`
+	DatabaseURI                 string `env:"DATABASE_URI"`
+	AccrualSystemAddress        string `env:"ACCRUAL_SYSTEM_ADDRESS"`
+	AuthKey                     string `env:"AUTH_KEY"`
+	WorkerPoolSize              int    `env:"WORKER_POOL_SIZE"`
+	WorkerPoolScheduleInSeconds int    `env:"WORKER_POOL_SCHEDULE_IN_SECONDS"`
+	WorkerPoolSelectLimit       int    `env:"WORKER_POOL_SELECT_LIMIT"`
 }
 
 func New() (*Config, error) {
@@ -38,6 +47,9 @@ func New() (*Config, error) {
 	flagSet.StringVar(&cfg.DatabaseURI, DatabaseURIFlag, DatabaseURIDefaultValue, "database URI")
 	flagSet.StringVar(&cfg.AccrualSystemAddress, AccrualSystemAddressFlag, AccrualSystemDefaultValue, "accrual system address")
 	flagSet.StringVar(&cfg.AuthKey, AuthKeyNameFlag, AuthKeyDefaultValue, "auth key")
+	flagSet.IntVar(&cfg.WorkerPoolSize, WorkerPoolSizeFlag, WorkerPoolSizeDefaultValue, "worker pool size")
+	flagSet.IntVar(&cfg.WorkerPoolScheduleInSeconds, WorkerPoolScheduleInSecondsFlag, WorkerPoolScheduleInSecondsDefaultValue, "worker pool schedule in seconds")
+	flagSet.IntVar(&cfg.WorkerPoolSelectLimit, WorkerPoolSelectLimitFlag, WorkerPoolSelectLimitDefaultValue, "worker pool select limit")
 	_ = flagSet.Parse(os.Args[1:])
 
 	AuthKey = cfg.AuthKey

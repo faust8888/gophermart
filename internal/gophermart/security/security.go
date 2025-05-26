@@ -63,6 +63,5 @@ func CheckUserSession(sessionID string) bool {
 }
 
 func createUserSession(sessionID string) {
-	//TODO: Check TokenExp Date
 	session[sessionID] = jwt.NewNumericDate(time.Now().Add(TokenExp))
 }

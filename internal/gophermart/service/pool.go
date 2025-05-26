@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"fmt"
+	"github.com/faust8888/gophermart/internal/middleware/logger"
 	"sync"
 	"time"
 )
@@ -10,13 +10,13 @@ import (
 type WorkerPool struct {
 	registerAccrualJobs    chan FetchOrderAccrualStatusJob
 	wg                     sync.WaitGroup
-	numberWorkers          int
+	poolSize               int
 	fixedScheduleInSeconds int
 	selectLimit            int
 }
 
 func (p *WorkerPool) Run(jobFunc func(FetchOrderAccrualStatusJob)) {
-	for w := 1; w <= p.numberWorkers; w++ {
+	for w := 1; w <= p.poolSize; w++ {
 		p.wg.Add(1)
 		go p.worker(p.registerAccrualJobs, jobFunc)
 	}
@@ -27,13 +27,13 @@ func (p *WorkerPool) Run(jobFunc func(FetchOrderAccrualStatusJob)) {
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("Shutting down workers...")
+			logger.Log.Info("worker pool shutting down")
 			cancel()
 			close(p.registerAccrualJobs)
 			p.wg.Wait()
-			fmt.Println("All workers done.")
+			logger.Log.Info("all workers don")
 		case <-ticker.C:
-			for i := 1; i <= p.numberWorkers; i++ {
+			for i := 1; i <= p.poolSize; i++ {
 				p.startFetchingOrderAccrualStatusAsync(p.selectLimit, i)
 			}
 		}
@@ -44,11 +44,11 @@ func (p *WorkerPool) startFetchingOrderAccrualStatusAsync(selectLimit, taskNumbe
 	p.registerAccrualJobs <- FetchOrderAccrualStatusJob{selectLimit: selectLimit, taskNumber: taskNumber}
 }
 
-func NewWorkerPool(numberWorkers, fixedScheduleInSeconds, selectLimit int) *WorkerPool {
+func NewWorkerPool(poolSize, fixedScheduleInSeconds, selectLimit int) *WorkerPool {
 	return &WorkerPool{
 		registerAccrualJobs:    make(chan FetchOrderAccrualStatusJob, 100),
 		wg:                     sync.WaitGroup{},
-		numberWorkers:          numberWorkers,
+		poolSize:               poolSize,
 		fixedScheduleInSeconds: fixedScheduleInSeconds,
 		selectLimit:            selectLimit,
 	}

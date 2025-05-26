@@ -19,7 +19,6 @@ type route interface {
 func New(h route) *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(logger.NewMiddleware)
-	//router.Use(security.NewMiddleware)
 	router.Post("/api/user/register", h.RegisterUser)
 	router.Post("/api/user/login", h.LoginUser)
 	router.Post("/api/user/orders", h.CreateUserOrder)

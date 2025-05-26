@@ -16,14 +16,13 @@ func (r *UserRepository) CreateUser(ctx context.Context, login, password string)
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
-	_, err := r.db.ExecContext(ctx,
-		`INSERT INTO "user" (login, password) VALUES ($1, $2)`, login, password)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO "user" (login, password) VALUES ($1, $2)`, login, password)
 
 	if err != nil {
 		if errorIs(err, pgerrors.UniqueViolation) {
 			return ErrLoginUniqueViolation
 		}
-		return fmt.Errorf("repository.postgres: couldn't save new user - %w", err)
+		return fmt.Errorf("postgres.UserRepository.CreateUser: %w", err)
 	}
 
 	return nil
@@ -32,15 +31,11 @@ func (r *UserRepository) CreateUser(ctx context.Context, login, password string)
 func (r *UserRepository) CheckUser(ctx context.Context, login, password string) error {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
-	query := `
-        SELECT id
-        FROM "user"
-        WHERE login = $1
-        AND password = $2
-    `
+
+	query := `SELECT id FROM "user" WHERE login = $1 AND password = $2`
 	rows, err := r.db.QueryContext(ctx, query, login, password)
 	if err != nil {
-		return fmt.Errorf("postgres.repository.CheckUser: %w", err)
+		return fmt.Errorf("postgres.UserRepository.CheckUser: %w", err)
 	}
 	defer rows.Close()
 
@@ -50,11 +45,11 @@ func (r *UserRepository) CheckUser(ctx context.Context, login, password string) 
 
 	var userID int
 	if err = rows.Scan(&userID); err != nil {
-		return fmt.Errorf("postgres.repository.CheckUser: failed to scan row: %w", err)
+		return fmt.Errorf("postgres.UserRepository.CheckUser: failed to scan row: %w", err)
 	}
 
 	if err = rows.Err(); err != nil {
-		return fmt.Errorf("postgres.repository.CheckUser: error during row iteration: %w", err)
+		return fmt.Errorf("postgres.UserRepository.CheckUser: error during row iteration: %w", err)
 	}
 
 	return nil
